@@ -34,6 +34,11 @@ class GroqTextEngine:
         self._logger = logger
         self._client: Any = None
 
+    @property
+    def model(self) -> str:
+        """שם המודל שנמצא בשימוש (להצגה/דיבוג)."""
+        return self._settings.groq_model
+
     # ------------------------------------------------------------------
     # ניהול הלקוח
     # ------------------------------------------------------------------

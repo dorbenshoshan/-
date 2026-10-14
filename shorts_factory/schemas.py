@@ -41,6 +41,16 @@ class Idea:
             "summary": self.summary,
         }
 
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "Idea":
+        """בונה רעיון ממילון (למשל מה-JSON שהגיע מהדפדפן)."""
+        return cls(
+            number=_safe_int(data.get("number"), 1) or 1,
+            title=_clean_str(data.get("title")),
+            hook=_clean_str(data.get("hook")),
+            summary=_clean_str(data.get("summary")),
+        )
+
 
 @dataclass(frozen=True)
 class Scene:
@@ -96,6 +106,32 @@ class ShortContent:
                 "scenes": [scene.to_dict() for scene in self.scenes],
             },
         }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "ShortContent":
+        """בונה חבילת תוכן ממילון (שימושי לשחזור מ-JSON שנשמר או מהדפדפן)."""
+        script = data.get("script") if isinstance(data.get("script"), dict) else {}
+        scenes_raw = script.get("scenes") if isinstance(script.get("scenes"), list) else []
+        scenes = tuple(
+            Scene(
+                scene_number=_safe_int(item.get("scene_number"), index) or index,
+                time_range=_clean_str(item.get("time_range")),
+                narration=_clean_str(item.get("narration")),
+                visual_prompt=_clean_str(item.get("visual_prompt")),
+            )
+            for index, item in enumerate(scenes_raw, start=1)
+            if isinstance(item, dict) and _clean_str(item.get("visual_prompt"))
+        )
+        return cls(
+            title=_clean_str(data.get("title")),
+            description=_clean_str(data.get("description")),
+            hashtags=tuple(normalize_hashtags(data.get("hashtags"))),
+            tags=tuple(normalize_tags(data.get("tags"), limit=1000)),
+            script_text=_clean_str(script.get("full_text")),
+            scenes=scenes,
+            duration_estimate_seconds=float(script.get("duration_estimate_seconds") or 0.0),
+            word_count=_safe_int(script.get("word_count"), 0),
+        )
 
 
 # ---------------------------------------------------------------------------

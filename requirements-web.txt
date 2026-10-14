@@ -1,0 +1,17 @@
+# Shorts Factory – גרסת הווב (שרת + דפדפן)
+# הכל חינמי: FastAPI + Uvicorn הם ספריות קוד פתוח, Groq ו-gTTS חינמיים.
+#
+#   pip install -r requirements-web.txt
+#   python webapp/server.py          →  http://127.0.0.1:8000
+
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+httpx>=0.27.0          # נדרדש ל-TestClient של FastAPI (בדיקות)
+
+# תלויות הליבה המשותפות עם גרסת ה-CLI
+groq>=1.0.0
+gTTS>=2.5.0
+requests>=2.31.0
+
+# אופציונלי – גיבוי אופליין לקריינות
+# pyttsx3>=0.9

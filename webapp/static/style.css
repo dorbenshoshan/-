@@ -1,0 +1,302 @@
+/* ==========================================================================
+   Shorts Factory – עיצוב הממשק (ערכת נושא כהה, תומך RTL)
+   ========================================================================== */
+
+:root {
+  --bg: #0f1117;
+  --bg-card: #171a24;
+  --bg-input: #0d0f16;
+  --border: #2a2f3e;
+  --text: #e8eaf0;
+  --text-dim: #9aa3b8;
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --radius: 14px;
+  --shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: "Segoe UI", "Alef", "Assistant", "Noto Sans Hebrew", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 48px;
+}
+
+/* ------------------------------ כותרת ---------------------------------- */
+.app-header { text-align: center; margin-bottom: 20px; }
+.app-header h1 { font-size: 2rem; letter-spacing: 0.5px; }
+.app-header p { color: var(--text-dim); margin-top: 4px; }
+.app-header strong { color: var(--success); }
+
+/* --------------------------- מד התקדמות -------------------------------- */
+.steps {
+  display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 8px; margin-bottom: 24px;
+}
+.step-dot {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  transition: all 0.25s ease;
+}
+.step-dot.active {
+  color: #fff;
+  border-color: var(--primary);
+  background: rgba(99, 102, 241, 0.18);
+}
+.step-dot.done { color: var(--success); border-color: var(--success); }
+
+/* ------------------------------ כרטיסים -------------------------------- */
+main { width: 100%; max-width: 760px; }
+
+.card {
+  display: none;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  margin-bottom: 20px;
+  animation: fadeIn 0.35s ease;
+}
+.card.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.card h2 { font-size: 1.3rem; margin-bottom: 14px; }
+.card h3 { font-size: 1.05rem; margin: 18px 0 10px; color: var(--text); }
+
+.hint { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 14px; }
+.hint a { color: var(--primary); }
+
+/* ------------------------------ שדות ----------------------------------- */
+label { display: block; margin: 14px 0 6px; color: var(--text-dim); font-size: 0.92rem; }
+
+input[type="text"],
+input[type="password"],
+select {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  padding: 11px 14px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+}
+input:focus, select:focus { outline: none; border-color: var(--primary); }
+
+.checkbox {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--text-dim); cursor: pointer; margin: 12px 0;
+}
+.checkbox input { width: 16px; height: 16px; accent-color: var(--primary); }
+.checkbox span { font-size: 0.92rem; }
+
+.row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+
+/* ------------------------------ כפתורים -------------------------------- */
+button {
+  font-family: inherit;
+  font-size: 0.98rem;
+  border: none;
+  border-radius: 10px;
+  padding: 11px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 10px;
+}
+button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+button.primary {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  width: 100%;
+  padding: 13px 20px;
+}
+button.primary:hover:not(:disabled) { background: var(--primary-hover); }
+
+button.secondary {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+button.secondary:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+
+button.small { padding: 6px 12px; font-size: 0.85rem; margin-top: 0; }
+
+/* --------------------------- רשימת רעיונות ------------------------------ */
+.ideas-list { display: grid; gap: 12px; margin-top: 8px; }
+
+.idea-card {
+  background: var(--bg-input);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.idea-card:hover { border-color: var(--primary); }
+.idea-card.selected { border-color: var(--success); background: rgba(34, 197, 94, 0.08); }
+.idea-card .idea-title { font-weight: 700; font-size: 1.02rem; }
+.idea-card .idea-hook { color: var(--text-dim); font-size: 0.9rem; margin-top: 4px; }
+.idea-card .idea-summary { color: var(--text-dim); font-size: 0.86rem; margin-top: 4px; }
+.idea-card .idea-num {
+  display: inline-block;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  padding: 1px 8px;
+  margin-left: 8px;
+}
+
+/* ----------------------------- תוכן / SEO ------------------------------- */
+.seo-title-box {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.script-box {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  white-space: pre-wrap;
+  line-height: 1.8;
+}
+.meta-line { color: var(--text-dim); font-size: 0.88rem; margin-top: 6px; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.chip {
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  color: #c7cbff;
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: 0.84rem;
+  direction: ltr;
+}
+.chip.hash { background: rgba(34, 197, 94, 0.13); border-color: rgba(34, 197, 94, 0.4); color: #b6f0c8; }
+
+/* ------------------------------ סצנות ---------------------------------- */
+.scene {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  margin-top: 10px;
+}
+.scene-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.scene-head strong { font-size: 0.98rem; }
+.scene-head .time { color: var(--text-dim); font-size: 0.85rem; direction: ltr; }
+.scene .narration { margin: 8px 0; color: var(--text); font-size: 0.95rem; }
+.scene .prompt {
+  background: #0a0c12;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.88rem;
+  color: #a5f3fc;
+  direction: ltr;
+  text-align: left;
+  font-family: "Consolas", "Courier New", monospace;
+  margin-top: 6px;
+}
+
+/* ----------------------------- קבצים ----------------------------------- */
+.files-box { display: grid; gap: 10px; margin-top: 8px; }
+.file-link {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color 0.2s ease;
+}
+.file-link:hover { border-color: var(--primary); }
+.file-link .fname { font-weight: 600; }
+.file-link .fdesc { color: var(--text-dim); font-size: 0.85rem; }
+
+audio { width: 100%; margin-top: 8px; }
+
+/* --------------------------- הודעות וטופטים ---------------------------- */
+.check-result { font-size: 0.9rem; }
+.check-result.ok { color: var(--success); }
+.check-result.err { color: var(--danger); }
+
+.error-box {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  color: #fecaca;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 12px;
+  font-size: 0.92rem;
+  white-space: pre-wrap;
+}
+
+.next-steps { padding-right: 20px; color: var(--text-dim); font-size: 0.94rem; }
+.next-steps li { margin-bottom: 6px; }
+.next-steps strong { color: var(--text); }
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e2230;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--primary);
+  border-radius: 10px;
+  padding: 12px 20px;
+  box-shadow: var(--shadow);
+  z-index: 100;
+  max-width: 90vw;
+  font-size: 0.93rem;
+}
+.toast.error { border-left-color: var(--danger); }
+.toast.success { border-left-color: var(--success); }
+
+.hidden { display: none !important; }
+
+.spinner {
+  display: inline-block;
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.app-footer { margin-top: auto; padding-top: 28px; color: var(--text-dim); font-size: 0.82rem; text-align: center; }
+
+@media (max-width: 560px) {
+  .card { padding: 16px; }
+  .app-header h1 { font-size: 1.5rem; }
+}
