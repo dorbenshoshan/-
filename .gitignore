@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# פלט המערכת (לא נשמר ב-Git)
+output/
+*.log
+
+# קבצי סוד – לעולם לא לשים אותם בגיט!
+.env
+
+# מערכת הפעלה / עורכים
+.DS_Store
+.idea/
+.vscode/
+*.swp
