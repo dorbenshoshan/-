@@ -282,6 +282,18 @@ audio { width: 100%; margin-top: 8px; }
 
 .hidden { display: none !important; }
 
+/* תג מצב הדגמה */
+.demo-badge {
+  display: inline-block;
+  margin-top: 10px;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  color: #fcd34d;
+  border-radius: 999px;
+  padding: 4px 14px;
+  font-size: 0.82rem;
+}
+
 .spinner {
   display: inline-block;
   width: 16px; height: 16px;

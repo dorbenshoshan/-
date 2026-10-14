@@ -16,6 +16,7 @@
 const state = {
   apiKey: sessionStorage.getItem("sf_api_key") || "",
   model: "",
+  demo: false,
   topic: "",
   ideas: [],
   selectedIdea: null,
@@ -151,7 +152,7 @@ function initStep1() {
     state.topic = topic;
     setBusy($("genIdeasBtn"), true, "מייצר רעיונות...");
     try {
-      const data = await api("/api/ideas", { topic, model: state.model || null });
+      const data = await api("/api/ideas", { topic, model: state.model || null, demo: state.demo });
       state.ideas = data.ideas;
       renderIdeas(data.ideas);
       $("ideasBox").classList.remove("hidden");
@@ -173,6 +174,7 @@ function initStep1() {
       const data = await api("/api/content", {
         idea: state.selectedIdea,
         model: state.model || null,
+        demo: state.demo,
       });
       state.content = data.content;
       renderContent(data.content);
@@ -284,6 +286,7 @@ function initStep3() {
         content: state.content,
         make_audio: $("makeAudioChk").checked,
         model: state.model || null,
+        demo: state.demo,
       });
       state.project = data;
       renderProject(data);
@@ -363,9 +366,26 @@ function escapeHtml(text) {
 // ---------------------------------------------------------------------------
 // אתחול
 // ---------------------------------------------------------------------------
+async function initDemoMode() {
+  try {
+    const response = await fetch("/api/health");
+    const data = await response.json();
+    state.demo = Boolean(data.demo_mode);
+  } catch {
+    state.demo = false;
+  }
+  $("demoModeChk").checked = state.demo;
+  $("demoModeChk").addEventListener("change", (event) => {
+    state.demo = event.target.checked;
+    $("demoBadge").classList.toggle("hidden", !state.demo);
+  });
+  $("demoBadge").classList.toggle("hidden", !state.demo);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   initStep0();
   initStep1();
   initStep3();
+  initDemoMode();
   showStep(0);
 });

@@ -262,6 +262,68 @@ class FileSecurityTests(WebServerTestCase):
         self.assertEqual(payload["idea"]["number"], ideas[0]["number"])
 
 
+class DemoModeTests(WebServerTestCase):
+    """מצב הדגמה: כל הזרימה עובדת בלי מפתח API ובלי אינטרנט."""
+
+    IDEA = {"number": 1, "title": "רעיון לדוגמה", "hook": "הוק", "summary": "תקציר"}
+
+    def test_demo_ideas_without_api_key(self):
+        response = self.post("/api/ideas", {"topic": "נושא כלשהו", "demo": True}, key=None)
+        self.assertEqual(response.status_code, 200)
+        ideas = response.json()["ideas"]
+        self.assertEqual(len(ideas), 5)
+        self.assertEqual(response.json()["model"], "demo")
+
+    def test_demo_content(self):
+        response = self.post(
+            "/api/content", {"idea": self.IDEA, "demo": True}, key=None
+        )
+        self.assertEqual(response.status_code, 200)
+        content = response.json()["content"]
+        self.assertEqual(len(content["tags"]), 15)
+        self.assertEqual(len(content["script"]["scenes"]), 4)
+
+    def test_demo_full_flow_and_downloads(self):
+        ideas = self.post("/api/ideas", {"topic": "נושא", "demo": True}, key=None).json()["ideas"]
+        content = self.post(
+            "/api/content", {"idea": ideas[0], "demo": True}, key=None
+        ).json()["content"]
+
+        response = self.post(
+            "/api/project",
+            {
+                "topic": "נושא להדגמה",
+                "idea": ideas[0],
+                "content": content,
+                "make_audio": True,
+                "demo": True,
+            },
+            key=None,
+        )
+        self.assertEqual(response.status_code, 200, response.text)
+        data = response.json()
+        self.assertEqual(data["audio"]["engine"], "demo")
+        self.assertTrue(data["files"]["audio"].endswith("voiceover_demo.wav"))
+
+        # קובץ השמע הוא WAV תקין ובעל גודל סביר
+        audio = self.client.get(data["files"]["audio"])
+        self.assertEqual(audio.status_code, 200)
+        self.assertEqual(audio.headers["content-type"], "audio/wav")
+        self.assertGreater(len(audio.content), 100_000)
+
+        # המטאדאטה נוצרת עם כל הסעיפים
+        metadata = self.client.get(data["files"]["metadata"])
+        self.assertEqual(metadata.status_code, 200)
+        self.assertIn("סצנות ויזואליות", metadata.text)
+        self.assertIn("voiceover_demo.wav", metadata.text)
+
+    def test_demo_env_mode_applies_without_flag(self):
+        with mock.patch.object(web_server, "DEMO_MODE", True):
+            response = self.post("/api/ideas", {"topic": "נושא"}, key=None)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(len(response.json()["ideas"]), 5)
+
+
 class EngineErrorTests(WebServerTestCase):
     def test_ai_error_returns_502(self):
         from shorts_factory.errors import AIEngineError

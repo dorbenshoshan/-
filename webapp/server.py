@@ -61,6 +61,7 @@ from shorts_factory.logger import setup_logger
 from shorts_factory.schemas import Idea, ShortContent
 from shorts_factory.storage import ProjectStorage
 from shorts_factory.tts_engine import SynthesisResult, TextToSpeechEngine
+from webapp.demo_data import DEMO_CONTENT, DEMO_IDEAS, write_demo_wav
 
 # ---------------------------------------------------------------------------
 # קבועים
@@ -71,6 +72,7 @@ TOKEN_PATTERN = re.compile(r"^web-[a-zA-Z0-9]{6,32}$")
 ALLOWED_FILENAMES = {
     "voiceover.mp3",
     "voiceover.wav",
+    "voiceover_demo.wav",
     "Script_Metadata.txt",
     "content.json",
 }
@@ -84,6 +86,10 @@ MEDIA_TYPES = {
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
 OUTPUT_DIR = Path(os.environ.get("SHORTS_OUTPUT_DIR", "output")).expanduser().resolve()
+
+# מצב הדגמה: מאפשר לבדוק את כל זרימת האתר גם בלי גישה ל-Groq/gTTS.
+# מופעל ע"י משתנה הסביבה SHORTS_DEMO_MODE=1 או ע"י סימון התיבה באתר.
+DEMO_MODE = os.environ.get("SHORTS_DEMO_MODE", "").strip().lower() in {"1", "true", "yes", "on"}
 
 logger = setup_logger(log_file=None)
 
@@ -104,6 +110,7 @@ class TopicRequest(BaseModel):
 
     topic: str = Field(..., min_length=2, max_length=300)
     model: Optional[str] = None
+    demo: bool = False
 
 
 class IdeaPayload(BaseModel):
@@ -120,6 +127,7 @@ class ContentRequest(BaseModel):
 
     idea: IdeaPayload
     model: Optional[str] = None
+    demo: bool = False
 
 
 class ProjectRequest(BaseModel):
@@ -130,6 +138,7 @@ class ProjectRequest(BaseModel):
     content: dict[str, Any]
     make_audio: bool = True
     model: Optional[str] = None
+    demo: bool = False
 
 
 class CheckRequest(BaseModel):
@@ -207,6 +216,7 @@ def api_health() -> dict[str, Any]:
         "status": "ok",
         "app": "Shorts Factory Web",
         "server_has_env_key": bool(os.environ.get("GROQ_API_KEY", "").strip()),
+        "demo_mode": DEMO_MODE,
     }
 
 
@@ -227,6 +237,9 @@ def api_ideas(
 ) -> dict[str, Any]:
     """שלב 1: מייצר 5 רעיונות לנושא שהמשתמש הזין."""
     try:
+        if payload.demo or DEMO_MODE:
+            logger.info("מצב הדגמה: מחזיר 5 רעיונות לדוגמה (בלי קריאה ל-Groq).")
+            return {"topic": payload.topic, "model": "demo", "ideas": DEMO_IDEAS}
         engine = _build_engine(x_groq_api_key, payload.model, logger)
         ideas = engine.generate_ideas(payload.topic)
     except Exception as exc:  # noqa: BLE001
@@ -244,6 +257,9 @@ def api_content(
 ) -> dict[str, Any]:
     """שלב 2: מייצר תסריט, פרומפטים ויזואליים וחבילת SEO לרעיון שנבחר."""
     try:
+        if payload.demo or DEMO_MODE:
+            logger.info("מצב הדגמה: מחזיר תסריט + פרומפטים + SEO לדוגמה (בלי קריאה ל-Groq).")
+            return {"content": DEMO_CONTENT}
         engine = _build_engine(x_groq_api_key, payload.model, logger)
         content = engine.generate_content(_idea_from_payload(payload.idea))
     except Exception as exc:  # noqa: BLE001
@@ -261,7 +277,17 @@ def api_project(
     audio_error: Optional[str] = None
 
     try:
-        settings = _resolve_settings(x_groq_api_key, payload.model, subdir=token)
+        demo = payload.demo or DEMO_MODE
+        if demo:
+            # במצב הדגמה אין צורך במפתח API – בונים Settings ישירות
+            settings = Settings(
+                groq_api_key="demo",
+                groq_model="demo",
+                output_dir=OUTPUT_DIR / token,
+                no_color=True,
+            )
+        else:
+            settings = _resolve_settings(x_groq_api_key, payload.model, subdir=token)
         content = ShortContent.from_dict(payload.content)
         idea = _idea_from_payload(payload.idea)
 
@@ -273,12 +299,22 @@ def api_project(
                 "topic": payload.topic,
                 "idea": idea.to_dict(),
                 "content": content.to_dict(),
-                "model": settings.groq_model,
+                "model": "demo" if demo else settings.groq_model,
                 "generated_at": datetime.now().isoformat(timespec="seconds"),
             },
         )
 
-        if payload.make_audio:
+        if demo:
+            # מקריאים קובץ WAV אמיתי (6 שניות) שנוצר מקומית – כדי שהנגן
+            # וההורדות באתר יעבדו במלואם גם בלי gTTS
+            if payload.make_audio:
+                demo_audio_path = paths.root / "voiceover_demo.wav"
+                write_demo_wav(demo_audio_path)
+                audio_result = SynthesisResult(
+                    path=demo_audio_path, engine="demo", size_bytes=demo_audio_path.stat().st_size
+                )
+                logger.info("מצב הדגמה: נוצר קובץ שמע לדוגמה (%d בתים).", audio_result.size_bytes)
+        elif payload.make_audio:
             try:
                 tts = _build_tts(settings, logger)
                 audio_result = tts.synthesize(content.script_text, paths.audio)
@@ -292,7 +328,7 @@ def api_project(
             idea=idea,
             content=content,
             topic=payload.topic,
-            model=settings.groq_model,
+            model="demo" if demo else settings.groq_model,
             audio=audio_result,
         )
 
